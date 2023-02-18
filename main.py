@@ -159,7 +159,7 @@ print(TWEET_INDEX)
 
 quote, image_path = get_quote_of_day(TWEET_INDEX)
 post_tweet(quote, image_path, api)
-dotenv_file = dotenv.find_dotenv()
+# dotenv_file = dotenv.find_dotenv()
 TWEET_INDEX += 1
 tweet_index_ref.set(TWEET_INDEX)
 # dotenv.set_key(dotenv_file, "TWEET_INDEX", f'{int(TWEET_INDEX)+1}')
