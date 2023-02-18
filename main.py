@@ -14,35 +14,42 @@ import os
 from datetime import date
 import math
 import textwrap
+import firebase_admin
+from firebase_admin import credentials, db
 
-# load_dotenv()
 
-# TWITTER_API_KEY = os.getenv("TWITTER_API_KEY")
-# TWITTER_API_SECRET_KEY = os.getenv("TWITTER_API_SECRET_KEY")
-# TWITTER_BEARER_TOKEN = os.getenv("TWITTER_BEARER_TOKEN")
-# TWITTER_CLIENT_ID = os.getenv("TWITTER_CLIENT_ID")
-# TWITTER_CLIENT_SECRET = os.getenv("TWITTER_CLIENT_SECRET")
-# TWITTER_ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN")
-# TWITTER_SECRET_ACCESS_TOKEN = os.getenv("TWITTER_SECRET_ACCESS_TOKEN")
-# QUOTE_API = os.getenv("QUOTE_API")
-# OPENAI_API_SECRET_KEY = os.getenv("OPENAI_API_SECRET_KEY")
-START_DATE = date.fromisoformat("2023-02-05")
-TWITTER_API_KEY = '4rLoXyLjdph3gOTR3m7yuaUwB'
-TWITTER_API_SECRET_KEY = 'gBUxXAELHzE2KxzBKKAqhE5BCZBEir4JU8A8H7DqqQ1yRpwVJT'
-TWITTER_BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAAKPdlAEAAAAAS8V66zNTpsrEfsBhkoQ58itdC1Q%3DJI81tfpxYfPsbZK5IidupJTFHlH1BwD9qiC9lzfU6hcHwSFjkn"
-TWITTER_CLIENT_ID = "ZVdZc3lTUE5fdnpfbDVsNVgyWm06MTpjaQ"
-TWITTER_CLIENT_SECRET = "eFqBgd1g4GG1664vTKzX5noivB97czpwriI_bmJN4RiadIl5EI"
-TWITTER_ACCESS_TOKEN = "1614259063608741896-2HzCeRUSCoqEHVeQWn4ktQXP3Clat xos"
-TWITTER_SECRET_ACCESS_TOKEN = "eOslUbzvICDdu0paeDgJ3bvZSHUrzkLfqGMCLdcMj65Gs"
-QUOTE_API = "https://pe411p.deta.dev"
-OPENAI_API_SECRET_KEY = "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"
-DISCORD_TOKEN = "MTA2ODA1MTc2Njc2OTM2OTE0OA.GctSRx.hyM9t5JaVRo--1wGZCxQ2Ib-TN5Wy96ZC_j3NA"
+load_dotenv()
+cred = credentials.Certificate("quotetwitterbotdb-firebase-adminsdk.json")
+firebase_admin.initialize_app(cred, {
+    'databaseURL': 'https://quotetwitterbotdb-default-rtdb.firebaseio.com'
+})
+
+TWITTER_API_KEY = os.getenv("TWITTER_API_KEY")
+TWITTER_API_SECRET_KEY = os.getenv("TWITTER_API_SECRET_KEY")
+TWITTER_BEARER_TOKEN = os.getenv("TWITTER_BEARER_TOKEN")
+TWITTER_CLIENT_ID = os.getenv("TWITTER_CLIENT_ID")
+TWITTER_CLIENT_SECRET = os.getenv("TWITTER_CLIENT_SECRET")
+TWITTER_ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN")
+TWITTER_SECRET_ACCESS_TOKEN = os.getenv("TWITTER_SECRET_ACCESS_TOKEN")
+QUOTE_API = os.getenv("QUOTE_API")
+OPENAI_API_SECRET_KEY = os.getenv("OPENAI_API_SECRET_KEY")
+# START_DATE = date.fromisoformat("2023-02-05")
+# TWITTER_API_KEY = 'cixsupor6uVsBFwQcp9nTnsl7'
+# TWITTER_API_SECRET_KEY = 'BaxeWFxdg3GwbSRcgYnzHnwzumtq97ZNkfAcpA6EX7VqvZ8h35'
+# TWITTER_BEARER_TOKEN = "AAAAAAAAAAAAAAAAAAAAAKPdlAEAAAAAS8V66zNTpsrEfsBhkoQ58itdC1Q%3DJI81tfpxYfPsbZK5IidupJTFHlH1BwD9qiC9lzfU6hcHwSFjkn"
+# TWITTER_CLIENT_ID = "eHRIa0FIcFlnbmNJMzRCYUVFWEg6MTpjaQ"
+# TWITTER_CLIENT_SECRET = "DlvvLEgwr_uhJm7T-gDadXfWOMCgxWFfAT2h_ungLAOb0eq4hv"
+# TWITTER_ACCESS_TOKEN = "1614259063608741896-AChDHltTmZLdUjsuc9BxFU24Y9uk7J"
+# TWITTER_SECRET_ACCESS_TOKEN = "fYkswtXeHqQHbVyELMAoneSfRXaROTt6UXbXT6RxcEU0n"
+# QUOTE_API = "https://pe411p.deta.dev"
+# OPENAI_API_SECRET_KEY = "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"
+# DISCORD_TOKEN = "MTA2ODA1MTc2Njc2OTM2OTE0OA.GctSRx.hyM9t5JaVRo--1wGZCxQ2Ib-TN5Wy96ZC_j3NA"
 
 openai.api_key = OPENAI_API_SECRET_KEY
 
 auth = tweepy.OAuthHandler(TWITTER_API_KEY, TWITTER_API_SECRET_KEY)
 auth.set_access_token(TWITTER_ACCESS_TOKEN, TWITTER_SECRET_ACCESS_TOKEN)
-api = tweepy.API(auth)
+api = tweepy.API(auth, wait_on_rate_limit=True)
 parser = GingerIt()
 prompt_suffixes = ["unreal engine, ultra-details, 16k", "synthwave cyberpunk, cool, contrasting, motivating, 16k", "fantasy art, ultra details, 16k, motivating, inspiring"]
 
@@ -139,9 +146,20 @@ def post_tweet(quote, image_path, api):
     return quote
 
 # TWEET_INDEX = os.getenv("TWEET_INDEX")
-TWEET_INDEX = (date.today()-START_DATE).days
-TWEET_INDEX = 53
+# TWEET_INDEX = (date.today()-START_DATE).days
+# TWEET_INDEX = 53
+tweet_index_ref = db.reference('/tweets/TWEET_INDEX')
+print(tweet_index_ref)
+TWEET_INDEX = tweet_index_ref.get()
+
+if TWEET_INDEX is None:
+    TWEET_INDEX = 0
+
+print(TWEET_INDEX)
+
 quote, image_path = get_quote_of_day(TWEET_INDEX)
 post_tweet(quote, image_path, api)
-# dotenv_file = dotenv.find_dotenv()
+dotenv_file = dotenv.find_dotenv()
+TWEET_INDEX += 1
+tweet_index_ref.set(TWEET_INDEX)
 # dotenv.set_key(dotenv_file, "TWEET_INDEX", f'{int(TWEET_INDEX)+1}')
